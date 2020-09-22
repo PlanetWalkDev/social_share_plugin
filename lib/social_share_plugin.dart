@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:meta/meta.dart';
 import 'package:flutter/services.dart';
-
+import 'package:path_provider/path_provider.dart';
 typedef Future<dynamic> OnCancelHandler();
 typedef Future<dynamic> OnErrorHandler(String error);
 typedef Future<dynamic> OnSuccessHandler(String postId);
@@ -34,6 +36,23 @@ class SocialSharePlugin {
       'type': type,
       'path': path,
     });
+  }
+
+  static Future<String> shareInstagramStory(
+      String imagePath,
+      String backgroundTopColor,
+      String backgroundBottomColor,
+      String attributionURL) async {
+    Map<String, dynamic> args;
+    args = <String, dynamic>{
+      "stickerImage": imagePath,
+      "backgroundTopColor": backgroundTopColor,
+      "backgroundBottomColor": backgroundBottomColor,
+      "attributionURL": attributionURL
+    };
+    final String response =
+    await _channel.invokeMethod('shareInstagramStory', args);
+    return response;
   }
 
   static Future<void> shareToFeedFacebook({
@@ -108,5 +127,10 @@ class SocialSharePlugin {
       'text': text,
       'url': url,
     });
+  }
+
+  static Future<Map> checkInstalledAppsForShare() async {
+    final Map apps = await _channel.invokeMethod('checkInstalledApps');
+    return apps;
   }
 }

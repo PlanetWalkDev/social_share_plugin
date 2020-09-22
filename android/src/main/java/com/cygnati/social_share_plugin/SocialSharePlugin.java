@@ -3,6 +3,7 @@ package com.cygnati.social_share_plugin;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
@@ -21,7 +22,9 @@ import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -47,7 +50,6 @@ public class SocialSharePlugin
 
     private final static int TWITTER_REQUEST_CODE = 0xc0ce;
     private final static int INSTAGRAM_REQUEST_CODE = 0xc0c3;
-
     private Activity activity;
     private MethodChannel channel;
     private final CallbackManager callbackManager;
@@ -144,6 +146,9 @@ public class SocialSharePlugin
                     result.success(false);
                 }
                 break;
+            case "shareInstagramStory" :
+                instagramStoryShare(call,result);
+                break;
             case "shareToFeedFacebook":
                 try {
                     pm.getPackageInfo(FACEBOOK_PACKAGE_NAME, PackageManager.GET_ACTIVITIES);
@@ -173,6 +178,9 @@ public class SocialSharePlugin
                     openPlayStore(TWITTER_PACKAGE_NAME);
                     result.success(false);
                 }
+                break;
+            case "checkInstalledApps":
+                result.success(checkInstalledApps());
                 break;
             default:
                 result.notImplemented();
@@ -212,6 +220,40 @@ public class SocialSharePlugin
         }
 
         activity.startActivityForResult(chooser, INSTAGRAM_REQUEST_CODE);
+    }
+
+    private void instagramStoryShare(@NonNull MethodCall call, @NonNull Result result){
+        //share on instagram story
+        String stickerImage = call.argument("stickerImage");
+        String backgroundImage = call.argument("backgroundImage");
+        String backgroundTopColor = call.argument("backgroundTopColor");
+        String backgroundBottomColor = call.argument("backgroundBottomColor");
+        String attributionURL = call.argument("attributionURL");
+        File file = new File(stickerImage);
+        Uri stickerImageFileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".social.share.fileprovider", file);
+
+        Intent intent = new Intent("com.instagram.share.ADD_TO_STORY");
+        intent.setType("image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.putExtra("interactive_asset_uri", stickerImageFileUri);
+        if(backgroundImage!=null){
+            //check if background image is also provided
+            File backfile = new File(backgroundImage);
+            Uri backgroundImageFileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".social.share.fileprovider", backfile);
+            intent.setDataAndType(backgroundImageFileUri,"image/*");
+        }
+        intent.putExtra("content_url", attributionURL);
+        intent.putExtra("top_background_color", backgroundTopColor);
+        intent.putExtra("bottom_background_color", backgroundBottomColor);
+        // Instantiate activity and verify it will resolve implicit intent
+        activity.grantUriPermission(
+                "com.instagram.android", stickerImageFileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (activity.getPackageManager().resolveActivity(intent, 0) != null) {
+            activity.startActivity(intent);
+            result.success("success");
+        } else {
+            result.success("error");
+        }
     }
 
     private void facebookShare(String caption, String mediaPath) {
@@ -279,5 +321,31 @@ public class SocialSharePlugin
         final String tweetUrl = String.format("https://twitter.com/intent/tweet?text=%s&url=%s", text, url);
         final Uri uri = Uri.parse(tweetUrl);
         activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, uri), TWITTER_REQUEST_CODE);
+    }
+
+    private Map checkInstalledApps(){
+        Map<String, Boolean> apps = new HashMap<>();
+        //assigning package manager
+        final PackageManager pm = activity.getPackageManager();
+        //get a list of installed apps.
+        List<PackageInfo> packages = pm.getInstalledPackages(PackageManager.GET_META_DATA);
+        apps.put("instagram",false);
+        apps.put("facebook",false);
+        apps.put("twitter",false);
+        for (PackageInfo packageInfo : packages) {
+            if(packageInfo.packageName.toString().contentEquals("com.instagram.android")){
+                apps.remove("instagram");
+                apps.put("instagram",true);
+            }
+            if(packageInfo.packageName.toString().contentEquals("com.facebook.katana")){
+                apps.remove("facebook");
+                apps.put("facebook",true);
+            }
+            if(packageInfo.packageName.toString().contentEquals("com.twitter.android")){
+                apps.remove("twitter");
+                apps.put("twitter",true);
+            }
+        }
+        return apps;
     }
 }

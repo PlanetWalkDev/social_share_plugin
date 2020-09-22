@@ -15,6 +15,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
+  Map _installAppMap = {'instagram': true, "facebook": true, "twitter": true};
 
   @override
   void initState() {
@@ -36,9 +37,10 @@ class _MyAppState extends State<MyApp> {
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
     if (!mounted) return;
-
+    Map apps = await SocialSharePlugin.checkInstalledAppsForShare();
     setState(() {
       _platformVersion = platformVersion;
+      _installAppMap = apps;
     });
   }
 
@@ -54,79 +56,103 @@ class _MyAppState extends State<MyApp> {
             Center(
               child: Text('Running on: $_platformVersion\n'),
             ),
-            RaisedButton(
-              child: Text('Share to Instagram'),
-              onPressed: () async {
-                File file = await ImagePicker.pickImage(source: ImageSource.gallery);
-                await SocialSharePlugin.shareToFeedInstagram(path: file.path);
-              },
+            Offstage(
+              offstage:  !_installAppMap['instagram'],
+              child: RaisedButton(
+                child: Text('Share to Instagram'),
+                onPressed: () async {
+                  File file =
+                      await ImagePicker.pickImage(source: ImageSource.gallery);
+                  await SocialSharePlugin.shareToFeedInstagram(path: file.path);
+                },
+              ),
             ),
-            RaisedButton(
-              child: Text('Share to Facebook'),
-              onPressed: () async {
-                File file = await ImagePicker.pickImage(source: ImageSource.gallery);
-                await SocialSharePlugin.shareToFeedFacebook(
-                    path: file.path,
-                    onSuccess: (_) {
-                      print('FACEBOOK SUCCESS');
-                      return;
-                    },
-                    onCancel: () {
-                      print('FACEBOOK CANCELLED');
-                      return;
-                    },
-                    onError: (error) {
-                      print('FACEBOOK ERROR $error');
-                      return;
-                    });
-              },
+            Offstage(
+              offstage:  !_installAppMap['instagram'],
+              child: RaisedButton(
+                child: Text('Share to InstagramStory'),
+                onPressed: () async {
+                  File file =
+                  await ImagePicker.pickImage(source: ImageSource.gallery);
+                  await SocialSharePlugin.shareInstagramStory(file.path,'#fff98f','#fff98f',"http://baidu.com");
+                },
+              ),
             ),
-            RaisedButton(
-              child: Text('Share to Facebook Link'),
-              onPressed: () async {
-                String url = 'https://flutter.dev/';
-                final quote =
-                    'Flutter is Google’s portable UI toolkit for building beautiful, natively-compiled applications for mobile, web, and desktop from a single codebase.';
-                final result = await SocialSharePlugin.shareToFeedFacebookLink(
-                  quote: quote,
-                  url: url,
-                  onSuccess: (_) {
-                    print('FACEBOOK SUCCESS');
-                    return;
-                  },
-                  onCancel: () {
-                    print('FACEBOOK CANCELLED');
-                    return;
-                  },
-                  onError: (error) {
-                    print('FACEBOOK ERROR $error');
-                    return;
-                  },
-                );
+            Offstage(
+              offstage: !_installAppMap['facebook'],
+              child: RaisedButton(
+                child: Text('Share to Facebook'),
+                onPressed: () async {
+                  File file =
+                      await ImagePicker.pickImage(source: ImageSource.gallery);
+                  await SocialSharePlugin.shareToFeedFacebook(
+                      path: file.path,
+                      onSuccess: (_) {
+                        print('FACEBOOK SUCCESS');
+                        return;
+                      },
+                      onCancel: () {
+                        print('FACEBOOK CANCELLED');
+                        return;
+                      },
+                      onError: (error) {
+                        print('FACEBOOK ERROR $error');
+                        return;
+                      });
+                },
+              ),
+            ),
+            Offstage(
+                offstage: !_installAppMap['facebook'],
+                child: RaisedButton(
+                  child: Text('Share to Facebook Link'),
+                  onPressed: () async {
+                    String url = 'https://flutter.dev/';
+                    final quote =
+                        'Flutter is Google’s portable UI toolkit for building beautiful, natively-compiled applications for mobile, web, and desktop from a single codebase.';
+                    final result =
+                        await SocialSharePlugin.shareToFeedFacebookLink(
+                      quote: quote,
+                      url: url,
+                      onSuccess: (_) {
+                        print('FACEBOOK SUCCESS');
+                        return;
+                      },
+                      onCancel: () {
+                        print('FACEBOOK CANCELLED');
+                        return;
+                      },
+                      onError: (error) {
+                        print('FACEBOOK ERROR $error');
+                        return;
+                      },
+                    );
 
-                print(result);
-              },
-            ),
-            RaisedButton(
-              child: Text('Share to Twitter'),
-              onPressed: () async {
-                String url = 'https://flutter.dev/';
-                final text =
-                    'Flutter is Google’s portable UI toolkit for building beautiful, natively-compiled applications for mobile, web, and desktop from a single codebase.';
-                final result = await SocialSharePlugin.shareToTwitterLink(
-                    text: text,
-                    url: url,
-                    onSuccess: (_) {
-                      print('TWITTER SUCCESS');
-                      return;
-                    },
-                    onCancel: () {
-                      print('TWITTER CANCELLED');
-                      return;
-                    });
-                print(result);
-              },
-            ),
+                    print(result);
+                  },
+                )),
+            Offstage(
+                offstage: !_installAppMap['twitter'],
+                child: RaisedButton(
+                  child: Text('Share to Twitter'),
+                  onPressed: () async {
+                    String url = 'https://flutter.dev/';
+                    final text =
+                        'Flutter is Google’s portable UI toolkit for building beautiful, natively-compiled applications for mobile, web, and desktop from a single codebase.';
+                    final result = await SocialSharePlugin.shareToTwitterLink(
+                        text: text,
+                        url: url,
+                        onSuccess: (_) {
+                          print('TWITTER SUCCESS');
+                          return;
+                        },
+                        onCancel: () {
+                          print('TWITTER CANCELLED');
+                          return;
+                        });
+                    print(result);
+                  },
+                )),
           ],
         ),
       ),
