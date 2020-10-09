@@ -108,6 +108,7 @@ class SocialSharePlugin {
   static Future<bool> shareToTwitterLink({
     String text,
     @required String url,
+    String hashtags,
     OnSuccessHandler onSuccess,
     OnCancelHandler onCancel,
   }) async {
@@ -126,6 +127,7 @@ class SocialSharePlugin {
     return _channel.invokeMethod('shareToTwitterLink', <String, dynamic>{
       'text': text,
       'url': url,
+      'hashtags': hashtags
     });
   }
 

@@ -108,7 +108,7 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     } else if([@"shareToTwitterLink" isEqualToString:call.method]) {
         NSURL *twitterURL = [NSURL URLWithString:@"twitter://"];
         if([[UIApplication sharedApplication] canOpenURL:twitterURL]) {
-            [self twitterShare:call.arguments[@"text"] url:call.arguments[@"url"]];
+            [self twitterShare:call.arguments[@"text"] url:call.arguments[@"url"] hashtags:call.arguments[@"hashtags"]];
             result(nil);
         } else {
             NSString *twitterLink = @"itms-apps://itunes.apple.com/us/app/apple-store/id333903271";
@@ -202,9 +202,10 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 }
 
 - (void)twitterShare:(NSString*)text
-                 url:(NSString*)url {
+                 url:(NSString*)url
+                 hashtags:(NSString*)hashtags {
     UIApplication* application = [UIApplication sharedApplication];
-    NSString* shareString = [NSString stringWithFormat:@"https://twitter.com/intent/tweet?text=%@&url=%@", text, url];
+    NSString* shareString = [NSString stringWithFormat:@"https://twitter.com/intent/tweet?text=%@&url=%@&hashtags=%@", text, url, hashtags];
     NSString* escapedShareString = [shareString stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet];
     NSURL* shareUrl = [NSURL URLWithString:escapedShareString];
     if (@available(iOS 10.0, *)) {

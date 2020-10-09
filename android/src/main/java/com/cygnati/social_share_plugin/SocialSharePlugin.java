@@ -172,7 +172,7 @@ public class SocialSharePlugin
             case "shareToTwitterLink":
                 try {
                     pm.getPackageInfo(TWITTER_PACKAGE_NAME, PackageManager.GET_ACTIVITIES);
-                    twitterShareLink(call.<String>argument("text"), call.<String>argument("url"));
+                    twitterShareLink(call.<String>argument("text"), call.<String>argument("url"), call.<String>argument("hashtags"));
                     result.success(true);
                 } catch (PackageManager.NameNotFoundException e) {
                     openPlayStore(TWITTER_PACKAGE_NAME);
@@ -317,8 +317,8 @@ public class SocialSharePlugin
         }
     }
 
-    private void twitterShareLink(String text, String url) {
-        final String tweetUrl = String.format("https://twitter.com/intent/tweet?text=%s&url=%s", text, url);
+    private void twitterShareLink(String text, String url, String hashtags) {
+        final String tweetUrl = String.format("https://twitter.com/intent/tweet?text=%s&url=%s&hashtags=%s", text, url, hashtags);
         final Uri uri = Uri.parse(tweetUrl);
         activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, uri), TWITTER_REQUEST_CODE);
     }
